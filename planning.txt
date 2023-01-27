@@ -1,0 +1,72 @@
+database :-
+    users
+        id              :   ID
+        name            :   String
+        email           :   String
+        profilePhoto    :   String
+        password        :   String
+        photos          :   photoID[]
+
+    photos
+        id              :   ID
+        url             :   String
+        user            :   userID
+
+
+routes :-
+    /auth
+        POST /login
+    /users
+        POST /users
+        PATCH /users
+        GET /users/me
+    /photos
+        GET /photos
+        POST /photos
+        GET /photos/:id
+        PATCH /photos/:id
+
+
+controllers :-
+    auth
+        login
+
+    user
+        createUser
+        getUser
+        updateUser
+
+    photo
+        fetchPhotos
+        uploadPhoto
+        updatePhoto
+
+
+services :-
+    auth
+        login
+
+    user
+        createUser
+        getUser
+        updateUser
+        givePhotoAccess
+
+    photo
+        fetchPhotos
+        uploadPhoto
+        updatePhoto
+
+
+middlewares :-
+    auth
+        authenticateUser
+
+
+utils :-
+    jwt
+        createJWTToken
+        verifyJWTToken
+    hashing
+        hashPassword
+        verifyPassword
