@@ -23,7 +23,6 @@ routes :-
     /photos
         GET /photos
         POST /photos
-        GET /photos/:id
         PATCH /photos/:id
 
 
