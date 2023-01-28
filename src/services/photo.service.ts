@@ -1,6 +1,5 @@
 import prisma from "../../prisma/prisma";
 import { NotFound, Unauthorized } from "../errors";
-import userService from "./user.service";
 
 const uploadPhoto = async (userId: number, file: Express.Multer.File) => {
     const photoUrl = "http://localhost:5000/images/" + file.filename;

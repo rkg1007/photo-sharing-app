@@ -58,19 +58,4 @@ const getUser = async (userId: number) => {
     return exclude(user, ["password"]);
 }
 
-const givePhotoAccess = async (userId: number, photoId: number) => {
-  await prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: {
-      photos: {
-        connect: {
-          id: photoId
-        }
-      }
-    }
-  });
-}
-
-export default { createUser, updateUser, getUser, givePhotoAccess };
+export default { createUser, updateUser, getUser };
