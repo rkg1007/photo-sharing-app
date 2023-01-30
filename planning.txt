@@ -1,5 +1,4 @@
 assumptions :-
-    - no hard validations is required like the given email is in correct format or not
     - user will be uploading one image at a time
     - no error if user is entering wrong email for providing access
     - user or photos won't be deleted once created in database
@@ -83,7 +82,6 @@ utils :-
 
 
 points for improvement :-
-    - validation can be added
     - indexing could be implemented on email field of user and id field of photos table
     - email could be used instead of id while fetching the user from database as the email is also going to be unique
     - architechture could be improved like instead of accessing the user repository in photos service, we could call 
