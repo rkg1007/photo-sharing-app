@@ -25,3 +25,4 @@ Note :-
 
    `npm run test`
 
+ - go through `planning.txt` file to understand the assumptions and points considered while creating this project
