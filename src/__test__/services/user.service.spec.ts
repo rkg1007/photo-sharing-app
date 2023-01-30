@@ -1,4 +1,5 @@
 import prisma from "../../../prisma/prisma";
+import { Error } from "../../constants";
 import userService from "../../services/user.service";
 import { exclude, hashPassword } from "../../utils";
 
@@ -74,7 +75,7 @@ describe("create user service", () => {
   test("should give error if user is already present", async () => {
     expect(async () => {
       await userService.createUser(mockedUserData);
-    }).rejects.toThrowError("user already exists with the given email");
+    }).rejects.toThrowError(Error.USER_FOUND);
   });
 
 });
@@ -122,7 +123,7 @@ describe("update user service", () => {
   test("should give error if user doesn't exists", async () => {
     expect(async () => {
       await userService.updateUser(2, mockedUserData);
-    }).rejects.toThrowError("user doesn't exists");
+    }).rejects.toThrowError(Error.USER_NOT_FOUND);
   });
 });
 
@@ -151,6 +152,6 @@ describe("get user service", () => {
   test("should give error if user doesn't exists", async () => {
     expect(async () => {
       await userService.getUser(2);
-    }).rejects.toThrowError("user doesn't exists");
+    }).rejects.toThrowError(Error.USER_NOT_FOUND);
   });
 });

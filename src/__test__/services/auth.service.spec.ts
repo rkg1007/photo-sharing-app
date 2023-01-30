@@ -1,4 +1,5 @@
 import prisma from "../../../prisma/prisma";
+import { Error } from "../../constants";
 import authService from "../../services/auth.service";
 import { comparePassword, createAccessToken } from "../../utils";
 
@@ -72,7 +73,7 @@ describe("login service", () => {
             ...mockedUserCredentials,
             email: "wrong email",
           });
-        }).rejects.toThrowError("user doesn't exists with given email");
+        }).rejects.toThrowError(Error.USER_NOT_FOUND);
     })
 
     test("should give error if password is wrong", async () => {
@@ -81,6 +82,6 @@ describe("login service", () => {
           ...mockedUserCredentials,
           password: "wrong password",
         });
-      }).rejects.toThrowError("password doesn't match");
+      }).rejects.toThrowError(Error.PASSWORD_NOT_MATCHED);
     });
 })

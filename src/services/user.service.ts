@@ -3,6 +3,7 @@ import { User } from "@prisma/client"
 import { BadRequest, NotFound } from "../errors";
 import { ICreateUser, IUpdateUser } from "../types";
 import { exclude, hashPassword } from "../utils";
+import { Error } from "../constants";
 
 const createUser = async (userData: ICreateUser) => {
   const isUserExist = await prisma.user.findUnique({
@@ -12,7 +13,7 @@ const createUser = async (userData: ICreateUser) => {
   });
   
   if (isUserExist) {
-    throw new BadRequest("user already exists with the given email");
+    throw new BadRequest(Error.USER_FOUND);
   }
 
   userData.password = await hashPassword(userData.password);
@@ -31,7 +32,7 @@ const updateUser = async (userId: number, updatedData: IUpdateUser) => {
   });
 
   if (!user) {
-    throw new NotFound("user doesn't exists");
+    throw new NotFound(Error.USER_NOT_FOUND);
   }
 
   if (updatedData.password) {
@@ -55,7 +56,7 @@ const getUser = async (userId: number) => {
     });
 
     if (!user) {
-      throw new NotFound("user doesn't exists");
+      throw new NotFound(Error.USER_NOT_FOUND);
     }
 
     return exclude(user, ["password"]);

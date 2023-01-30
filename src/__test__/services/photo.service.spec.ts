@@ -1,4 +1,5 @@
 import prisma from "../../../prisma/prisma";
+import { Error } from "../../constants";
 import photoService from "../../services/photo.service";
 
 const mockedPhoto = {
@@ -139,13 +140,13 @@ describe("update photo access service", () => {
     expect(async () => {
       await photoService.updatePhotoAccess(2, 1, ["email1"]);
     }).rejects.toThrowError(
-      "you are not authorized to change access of given photo"
+      Error.NOT_AUTHORISED
     );
   });
 
   test("should give error if user id doesn't match", async () => {
     expect(async () => {
       await photoService.updatePhotoAccess(1, 2, ["email1"]);
-    }).rejects.toThrowError("photo is not found");
+    }).rejects.toThrowError(Error.PHOTO_NOT_FOUND);
   });
 });

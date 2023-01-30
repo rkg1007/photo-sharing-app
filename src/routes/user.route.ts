@@ -1,17 +1,19 @@
 import { Router } from "express";
 import { createUser, getUser, updateUser } from "../controllers";
-import { authenticate } from "../middlewares";
-import { fileUploadHandler } from "../middlewares/file-uploader.middleware";
+import { authenticate, fileUploadHandler } from "../middlewares";
+import { asyncWrapper } from "../utils";
 
 const router = Router();
 
 router
-    .route("/")
-    .post(createUser)
-    .patch(authenticate, fileUploadHandler, updateUser)
+  .route("/")
+  .post(asyncWrapper(createUser))
+  .patch(
+    asyncWrapper(authenticate),
+    asyncWrapper(fileUploadHandler),
+    asyncWrapper(updateUser)
+  );
 
-router
-    .route("/me")
-    .get(authenticate, getUser)
+router.route("/me").get(asyncWrapper(authenticate), asyncWrapper(getUser));
 
 export default router;

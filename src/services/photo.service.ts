@@ -1,8 +1,9 @@
 import prisma from "../../prisma/prisma";
+import { Error } from "../constants";
 import { NotFound, Unauthorized } from "../errors";
 
 const uploadPhoto = async (userId: number, file: Express.Multer.File) => {
-    const photoUrl = `http://localhost:5000/images/${file.filename}`.split(" ").join("");
+    const photoUrl = `http://localhost:5000/images/${file.filename}`;
     const photo = await prisma.photo.create({
         data: {
             url: photoUrl,
@@ -38,10 +39,10 @@ const updatePhotoAccess = async (userId: number, photoId: number, allowedUsers: 
     });
 
     if (!photo) {
-        throw new NotFound("photo is not found");
+        throw new NotFound(Error.PHOTO_NOT_FOUND);
     }
     if (photo.ownerId !== userId) {
-        throw new Unauthorized("you are not authorized to change access of given photo");
+        throw new Unauthorized(Error.NOT_AUTHORISED);
     }
 
     let noOfUserNotFound = 0

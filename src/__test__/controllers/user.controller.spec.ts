@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { Error } from "../../constants";
 import { createUser, getUser, updateUser } from "../../controllers";
 import { BadRequest } from "../../errors";
 import userService from "../../services/user.service";
@@ -14,16 +15,10 @@ const mockRequest = (req: any) => {
 };
 
 const mockResponse = () => {
-  const response = {} as unknown as Response;
-  response.status = jest.fn(() => response);
-  response.json = jest.fn(() => response);
+  const response = { send: jest.fn() } as unknown as Response;
   return response;
 };
 
-const mockNextFunction = () => {
-  const next = jest.fn() as unknown as NextFunction;
-  return next;
-};
 
 jest.mock("../../services/user.service", () => {
   return {
@@ -47,7 +42,6 @@ jest.mock("../../services/user.service", () => {
 
 describe("create user controller", () => {
   const mockedResponse = mockResponse();
-  const mockedNextFunction = mockNextFunction();
 
   const testCases = [
     {
@@ -58,39 +52,9 @@ describe("create user controller", () => {
     },
     {
       req: { body: mockedUserDetail },
-      functionCallExpected: mockedResponse.status,
-      withData: 201,
-      msg: "should call response.status with 201",
-    },
-    {
-      req: { body: mockedUserDetail },
-      functionCallExpected: mockedResponse.json,
-      withData: { data: mockedUserDetail },
-      msg: "should call response.json with mocked used details",
-    },
-    {
-      req: { body: { ...mockedUserDetail, name: undefined } },
-      functionCallExpected: mockedNextFunction,
-      withData: new BadRequest(
-        "missing either one or more values from name, email and password"
-      ),
-      msg: "should call next function with bad request error",
-    },
-    {
-      req: { body: { ...mockedUserDetail, email: undefined } },
-      functionCallExpected: mockedNextFunction,
-      withData: new BadRequest(
-        "missing either one or more values from name, email and password"
-      ),
-      msg: "should call next function with bad request error",
-    },
-    {
-      req: { body: { ...mockedUserDetail, password: undefined } },
-      functionCallExpected: mockedNextFunction,
-      withData: new BadRequest(
-        "missing either one or more values from name, email and password"
-      ),
-      msg: "should call next function with bad request error",
+      functionCallExpected: mockedResponse.send,
+      withData: { statusCode: 201, user: mockedUserDetail },
+      msg: "should call response.send",
     },
   ];
 
@@ -98,15 +62,21 @@ describe("create user controller", () => {
     '$msg',
     async ({ req, functionCallExpected, withData }) => {
       const mockedRequest = mockRequest(req);
-      await createUser(mockedRequest, mockedResponse, mockedNextFunction);
+      await createUser(mockedRequest, mockedResponse);
       expect(functionCallExpected).toHaveBeenCalledWith(withData);
     }
   );
+
+  test("should give error if email or password is missing", async () => {
+    const mockedRequest = mockRequest({ body: {} });
+    expect(async () => {
+      await createUser(mockedRequest, mockedResponse);
+    }).rejects.toThrowError(Error.MISSING_VALUE);
+  });
 });
 
 describe("update user controller", () => {
   const mockedResponse = mockResponse();
-  const mockedNextFunction = mockNextFunction();
 
   const testCases = [
     {
@@ -117,21 +87,9 @@ describe("update user controller", () => {
     },
     {
       req: { params: { userId: 1 }, body: mockedUserDetail },
-      functionCallExpected: mockedResponse.status,
-      withData: [200],
-      msg: "should call userService.getUser",
-    },
-    {
-      req: { params: { userId: 1 }, body: mockedUserDetail },
-      functionCallExpected: mockedResponse.json,
-      withData: [{ data: mockedUserDetail }],
-      msg: "should call userService.getUser",
-    },
-    {
-      req: { params: { userId: 1 }, body: {} },
-      functionCallExpected: mockedNextFunction,
-      withData: [new BadRequest("no field is changed")],
-      msg: "should call userService.getUser",
+      functionCallExpected: mockedResponse.send,
+      withData: [{ statusCode: 200, user: mockedUserDetail }],
+      msg: "should call response.send",
     },
   ];
 
@@ -139,15 +97,21 @@ describe("update user controller", () => {
     "$msg",
     async ({ req, functionCallExpected, withData, msg }) => {
       const mockedRequest = mockRequest(req);
-      await updateUser(mockedRequest, mockedResponse, mockedNextFunction);
+      await updateUser(mockedRequest, mockedResponse);
       expect(functionCallExpected).toHaveBeenCalledWith(...withData);
     }
   );
+
+  test("should give error if email or password is missing", async () => {
+    const mockedRequest = mockRequest({ body: {} });
+    expect(async () => {
+      await updateUser(mockedRequest, mockedResponse);
+    }).rejects.toThrowError(Error.NO_FIELD_CHANGED);
+  });
 });
 
 describe("get user controller", () => {
   const mockedResponse = mockResponse();
-  const mockedNextFunction = mockNextFunction();
 
   const testCases = [
     {
@@ -158,15 +122,9 @@ describe("get user controller", () => {
     },
     {
       req: { params: { userId: 1 } },
-      functionCallExpected: mockedResponse.status,
-      withData: 200,
-      msg: "should call userService.getUser",
-    },
-    {
-      req: { params: { userId: 1 } },
-      functionCallExpected: mockedResponse.json,
-      withData: { data: mockedUserDetail },
-      msg: "should call userService.getUser",
+      functionCallExpected: mockedResponse.send,
+      withData: { statusCode: 200, user: mockedUserDetail },
+      msg: "should call response.send",
     },
   ];
 
@@ -174,7 +132,7 @@ describe("get user controller", () => {
     "$msg",
     async ({ req, functionCallExpected, withData }) => {
       const mockedRequest = mockRequest(req);
-      await getUser(mockedRequest, mockedResponse, mockedNextFunction);
+      await getUser(mockedRequest, mockedResponse);
       expect(functionCallExpected).toHaveBeenCalledWith(withData);
     }
   );

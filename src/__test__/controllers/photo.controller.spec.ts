@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { Error } from "../../constants";
 import { fetchPhotos, updatePhotoAccess, uploadPhoto } from "../../controllers/photo.controller";
 import { BadRequest } from "../../errors";
 import photoService from "../../services/photo.service";
@@ -14,16 +15,10 @@ const mockRequest = (req: any) => {
 };
 
 const mockResponse = () => {
-  const response = {} as unknown as Response;
-  response.status = jest.fn(() => response);
-  response.json = jest.fn(() => response);
+  const response = { send: jest.fn() } as unknown as Response;
   return response;
 };
 
-const mockNextFunction = () => {
-  const next = jest.fn() as unknown as NextFunction;
-  return next;
-};
 
 jest.mock("../../services/photo.service", () => {
     return {
@@ -35,7 +30,6 @@ jest.mock("../../services/photo.service", () => {
 
 describe("upload photo controller", () => {
     const mockedResponse = mockResponse();
-    const mockedNextFunction = mockNextFunction();
 
     const testCases = [
       {
@@ -45,29 +39,22 @@ describe("upload photo controller", () => {
         withData: [1, {} as Express.Multer.File],
       },
       {
-        msg: "should call response.status",
+        msg: "should call response.send",
         request: { params: { userId: 1 }, file: {} as Express.Multer.File },
-        expectedFunctionCall: mockedResponse.status,
-        withData: [200],
-      },
-      {
-        msg: "should call response.json",
-        request: { params: { userId: 1 }, file: {} as Express.Multer.File },
-        expectedFunctionCall: mockedResponse.json,
-        withData: [{ data: mockedPhoto}],
+        expectedFunctionCall: mockedResponse.send,
+        withData: [{statusCode: 200, photo: mockedPhoto }],
       },
     ];
 
     test.each(testCases)("$msg", async ({ request, expectedFunctionCall, withData }) => {
         const mockedRequest = mockRequest(request);
-        await uploadPhoto(mockedRequest, mockedResponse, mockedNextFunction);
+        await uploadPhoto(mockedRequest, mockedResponse);
         expect(expectedFunctionCall).toHaveBeenCalledWith(...withData)
     })
 })
 
 describe("fetch photo controller", () => {
   const mockedResponse = mockResponse();
-  const mockedNextFunction = mockNextFunction();
 
   const testCases = [
     {
@@ -79,14 +66,8 @@ describe("fetch photo controller", () => {
     {
       msg: "should call response.status",
       request: { params: { userId: 1 } },
-      expectedFunctionCall: mockedResponse.status,
-      withData: [200],
-    },
-    {
-      msg: "should call response.json",
-      request: { params: { userId: 1 } },
-      expectedFunctionCall: mockedResponse.json,
-      withData: [{ data: [mockedPhoto]}],
+      expectedFunctionCall: mockedResponse.send,
+      withData: [{ statusCode: 200, photos: [mockedPhoto]}],
     },
   ];
 
@@ -94,7 +75,7 @@ describe("fetch photo controller", () => {
     "$msg",
     async ({ request, expectedFunctionCall, withData }) => {
       const mockedRequest = mockRequest(request);
-      await fetchPhotos(mockedRequest, mockedResponse, mockedNextFunction);
+      await fetchPhotos(mockedRequest, mockedResponse);
       expect(expectedFunctionCall).toHaveBeenCalledWith(...withData);
     }
   );
@@ -102,7 +83,6 @@ describe("fetch photo controller", () => {
 
 describe("update Photo Access controller", () => {
   const mockedResponse = mockResponse();
-  const mockedNextFunction = mockNextFunction();
 
   const testCases = [
     {
@@ -120,28 +100,8 @@ describe("update Photo Access controller", () => {
         params: { userId: 1, photoId: 1 },
         body: { allowedUsers: ["email1"] },
       },
-      expectedFunctionCall: mockedResponse.status,
-      withData: [200],
-    },
-    {
-      msg: "should call response.json",
-      request: {
-        params: { userId: 1, photoId: 1 },
-        body: { allowedUsers: ["email1"] },
-      },
-      expectedFunctionCall: mockedResponse.json,
-      withData: [{ data: { msg: "access provided" } }],
-    },
-    {
-      msg: "should call next function with error",
-      request: {
-        params: { userId: 1, photoId: 1 },
-        body: { allowedUsers: [] },
-      },
-      expectedFunctionCall: mockedNextFunction,
-      withData: [
-        new BadRequest("please send users list to allow access to users"),
-      ],
+      expectedFunctionCall: mockedResponse.send,
+      withData: [{statusCode: 200, msg: "access provided"}],
     },
   ];
 
@@ -149,8 +109,15 @@ describe("update Photo Access controller", () => {
     "$msg",
     async ({ request, expectedFunctionCall, withData }) => {
       const mockedRequest = mockRequest(request);
-      await updatePhotoAccess(mockedRequest, mockedResponse, mockedNextFunction);
+      await updatePhotoAccess(mockedRequest, mockedResponse);
       expect(expectedFunctionCall).toHaveBeenCalledWith(...withData);
     }
   );
+
+  test("should give error if allowed user list undefined or empty", async () => {
+    const mockedRequest = mockRequest({ params: {userId: 1, photoId: 1}, body: {} });
+    expect(async () => {
+      await updatePhotoAccess(mockedRequest, mockedResponse);
+    }).rejects.toThrowError(Error.USER_LIST_EMPTY);
+  });
 });

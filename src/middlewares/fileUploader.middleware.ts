@@ -1,5 +1,8 @@
+import { StatusCodes } from "http-status-codes";
 import multer from "multer";
 import path from "path";
+import { Error } from "../constants";
+import { CustomError } from "../errors";
 
 export const fileUploadHandler = multer({
   storage: multer.diskStorage({
@@ -17,7 +20,9 @@ export const fileUploadHandler = multer({
       cb(null, true);
     } else {
       cb(null, false);
-      return cb(new Error("Only .png, .jpg and .jpeg format allowed!"));
+      return cb(
+        new CustomError(Error.INVALID_FILE_EXTENSION, StatusCodes.BAD_REQUEST)
+      );
     }
   },
 }).single("photo");

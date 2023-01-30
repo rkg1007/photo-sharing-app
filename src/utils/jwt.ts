@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { Error } from "../constants";
 import { Unauthorized } from "../errors";
 
 export const createAccessToken = (payload: any): string => {
@@ -11,6 +12,6 @@ export const verifyToken = (token: string) => {
   try {
     return jwt.verify(token, jwtSecret);
   } catch (error) {
-    throw new Unauthorized("authorization token is invalid");
+    throw new Unauthorized(Error.INVALID_AUTHORIZATION_TOKEN);
   }
 };

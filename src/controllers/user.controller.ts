@@ -2,27 +2,25 @@ import { StatusCodes } from "http-status-codes";
 import { Request, Response } from "express";
 import { BadRequest } from "../errors";
 import userService from "../services/user.service";
-import { asyncWrapper } from "../utils/async-wrapper";
+import { Error } from "../constants";
 
-export const createUser = asyncWrapper(async (req: Request, res: Response) => {
+export const createUser = async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
-    throw new BadRequest(
-      "missing either one or more values from name, email and password"
-    );
+    throw new BadRequest(Error.MISSING_VALUE);
   }
 
   const user = await userService.createUser({ name, email, password });
-  res.status(StatusCodes.CREATED).json({data: user});
-});
+  res.send({ statusCode: StatusCodes.CREATED, user })
+};
 
-export const updateUser = asyncWrapper(async (req: Request, res: Response) => {
+export const updateUser = async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
   if (!name && !email && !password && !req.file) {
-    throw new BadRequest("no field is changed");
+    throw new BadRequest(Error.NO_FIELD_CHANGED);
   }
-  
-  const updatedData: Record<string, string> = {}
+
+  const updatedData: Record<string, string> = {};
   if (name) updatedData.name = name;
   if (email) updatedData.email = email;
   if (password) updatedData.password = password;
@@ -32,11 +30,11 @@ export const updateUser = asyncWrapper(async (req: Request, res: Response) => {
 
   const userId = Number(req.params.userId);
   const user = await userService.updateUser(userId, updatedData);
-  res.status(StatusCodes.OK).json({ data: user });
-});
+  res.send({ statusCode: StatusCodes.OK, user });
+};
 
-export const getUser = asyncWrapper(async (req: Request, res: Response) => {
+export const getUser = async (req: Request, res: Response) => {
   const userId = Number(req.params.userId);
   const user = await userService.getUser(userId);
-  res.status(StatusCodes.OK).json({ data: user })
-});
+  res.send({ statusCode: StatusCodes.OK, user });
+};
