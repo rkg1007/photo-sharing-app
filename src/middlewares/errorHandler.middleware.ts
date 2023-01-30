@@ -17,8 +17,4 @@ export const errorHandler = (
   }
 
   res.send({ statusCode, msg })
-  // res.status(statusCode).json({
-  //   status: "failed",
-  //   msg,
-  // });
 };
