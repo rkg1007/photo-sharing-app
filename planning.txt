@@ -1,3 +1,9 @@
+assumptions :-
+    - no hard validations is required like the given email is in correct format or not
+    - user will be uploading one image at a time
+    - no error if user is entering wrong email for providing access
+    - user or photos won't be deleted once created in database
+
 database :-
     users
         id              :   ID
@@ -12,6 +18,9 @@ database :-
         url             :   String
         user            :   userID
 
+points considered for designing database :-
+    - will store photos id as a foreign key in user table 
+        - will help in fetching images for a particular user fast (search operations will be less in photo table)
 
 routes :-
     /auth
@@ -69,3 +78,12 @@ utils :-
     hashing
         hashPassword
         verifyPassword
+
+
+points for improvement :-
+    - validation can be added
+    - indexing could be implemented on email field of user and id field of photos table
+    - email could be used instead of id while fetching the user from database as the email is also going to be unique
+    - architechture could be improved like instead of accessing the user repository in photos service, we could call 
+        a function of user service
+    - test cases could be improved according to the validation added
