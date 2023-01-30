@@ -3,13 +3,15 @@ assumptions :-
     - user will be uploading one image at a time
     - no error if user is entering wrong email for providing access
     - user or photos won't be deleted once created in database
+    - photo access won't be revoked once access is provided to a user
+    - user will be able to access the photo if the user have image url with him/her
 
 database :-
     users
         id              :   ID
         name            :   String
         email           :   String
-        profilePhoto    :   String
+        image           :   String
         password        :   String
         photos          :   photoID[]
 
