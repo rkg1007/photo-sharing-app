@@ -42,13 +42,13 @@ export const updateUser = async (req: Request, res: Response) => {
     updatedData.image = "http://localhost:5000/images/" + req.file.filename;
   }
 
-  const userId = Number(req.params.userId);
-  const user = await userService.updateUser(userId, updatedData);
+  const userEmail = req.params.email
+  const user = await userService.updateUser(userEmail, updatedData);
   res.send({ statusCode: StatusCodes.OK, user });
 };
 
 export const getUser = async (req: Request, res: Response) => {
-  const userId = Number(req.params.userId);
-  const user = await userService.getUser(userId);
+  const userEmail = req.params.email;
+  const user = await userService.getUser(userEmail);
   res.send({ statusCode: StatusCodes.OK, user });
 };

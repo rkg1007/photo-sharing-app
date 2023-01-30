@@ -1,44 +1,39 @@
 import prisma from "../../../prisma/prisma";
 import { Error } from "../../constants";
+import userRepository from "../../repositories/user.repository";
 import userService from "../../services/user.service";
 import { exclude, hashPassword } from "../../utils";
 
 const mockedUserData = {
-    name: "name",
-  email: "email",
-  password: "password",
+  name: "name",
+  email: "email@email.com",
+  password: "Password@123",
 };
 
 const mockedUser = {
   id: 1,
   name: "name",
-  email: "email",
+  email: "email@email.com",
   password: "hashedPassword",
 };
 
-jest.mock("../../../prisma/prisma", () => {
+jest.mock("../../repositories/user.repository", () => {
   return {
-    user: {
-      findUnique: jest.fn((query) => {
-        const { email, id } = query.where;
-        if (email && email !== "email") {
-          return null;
-        }
-        if (id && id != 1) {
-          return null;
-        }
-        return mockedUser;
-      }),
-      create: jest.fn(() => mockedUser),
-      update: jest.fn(() => mockedUser),
-    },
+    getUser: jest.fn((email) => {
+      if (email && email !== "email@email.com") {
+        return null;
+      }
+      return mockedUser;
+    }),
+    createUser: jest.fn(() => mockedUser),
+    updateUser: jest.fn(() => mockedUser),
   };
 });
 
 jest.mock("../../utils", () => {
   return {
     exclude: jest.fn((x) => x),
-    hashPassword: jest.fn(x => "hashedPassword"),
+    hashPassword: jest.fn((x) => "hashedPassword"),
   };
 });
 
@@ -46,21 +41,15 @@ describe("create user service", () => {
   const testCases = [
     {
       msg: "should call prisma.user.findUnique",
-      userData: { ...mockedUserData, email: "newEmail" },
-      functionCallExpected: prisma.user.findUnique,
-      withData: [{ where: { email: "newEmail" } }],
+      userData: { ...mockedUserData, email: "email1@email.com" },
+      functionCallExpected: userRepository.getUser,
+      withData: ["email1@email.com"],
     },
     {
       msg: "should call hashPassword",
-      userData: { ...mockedUserData, email: "newEmail" },
+      userData: { ...mockedUserData, email: "email1@email.com" },
       functionCallExpected: hashPassword,
       withData: [mockedUserData.password],
-    },
-    {
-      msg: "should call exclude",
-      userData: { ...mockedUserData, email: "newEmail" },
-      functionCallExpected: exclude,
-      withData: [mockedUser, ["password"]],
     },
   ];
 
@@ -77,15 +66,14 @@ describe("create user service", () => {
       await userService.createUser(mockedUserData);
     }).rejects.toThrowError(Error.USER_FOUND);
   });
-
 });
 
 describe("update user service", () => {
   const testCases = [
     {
       msg: "should call prisma.user.findUnique",
-      functionCallExpected: prisma.user.findUnique,
-      withData: [{ where: { id: 1 } }],
+      functionCallExpected: userRepository.getUser,
+      withData: ["email@email.com"],
     },
     {
       msg: "should call hashPassword",
@@ -93,36 +81,20 @@ describe("update user service", () => {
       withData: [mockedUserData.password],
     },
     {
-      msg: "should call exclude",
-      functionCallExpected: exclude,
-      withData: [mockedUser, ["password"]],
+      msg: "should call prisma.user.update",
+      functionCallExpected: userRepository.updateUser,
+      withData: ["email@email.com", mockedUserData],
     },
-    {
-        msg: "should call prisma.user.update",
-        functionCallExpected: prisma.user.update,
-        withData: [{
-            where: {
-                id: 1
-            },
-            data: {
-                ...mockedUserData,
-                password: "hashedPassword"
-            }
-        }]
-    }
   ];
 
-  test.each(testCases)(
-    "$msg",
-    async ({ functionCallExpected, withData }) => {
-      await userService.updateUser(1, mockedUserData);
-      expect(functionCallExpected).toHaveBeenCalledWith(...withData);
-    }
-  );
+  test.each(testCases)("$msg", async ({ functionCallExpected, withData }) => {
+    await userService.updateUser("email@email.com", mockedUserData);
+    expect(functionCallExpected).toHaveBeenCalledWith(...withData);
+  });
 
   test("should give error if user doesn't exists", async () => {
     expect(async () => {
-      await userService.updateUser(2, mockedUserData);
+      await userService.updateUser("email1@email.com", mockedUserData);
     }).rejects.toThrowError(Error.USER_NOT_FOUND);
   });
 });
@@ -131,27 +103,19 @@ describe("get user service", () => {
   const testCases = [
     {
       msg: "should call prisma.user.findUnique",
-      functionCallExpected: prisma.user.findUnique,
-      withData: [{ where: { id: 1 } }],
-    },
-    {
-      msg: "should call exclude",
-      functionCallExpected: exclude,
-      withData: [mockedUser, ["password"]],
+      functionCallExpected: userRepository.getUser,
+      withData: ["email@email.com"],
     },
   ];
 
-  test.each(testCases)(
-    "$msg",
-    async ({ functionCallExpected, withData }) => {
-      await userService.getUser(1);
-      expect(functionCallExpected).toHaveBeenCalledWith(...withData);
-    }
-  );
+  test.each(testCases)("$msg", async ({ functionCallExpected, withData }) => {
+    await userService.getUser("email@email.com");
+    expect(functionCallExpected).toHaveBeenCalledWith(...withData);
+  });
 
   test("should give error if user doesn't exists", async () => {
     expect(async () => {
-      await userService.getUser(2);
+      await userService.getUser("email1@email.com");
     }).rejects.toThrowError(Error.USER_NOT_FOUND);
   });
 });

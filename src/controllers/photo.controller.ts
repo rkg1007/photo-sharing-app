@@ -6,21 +6,21 @@ import photoService from "../services/photo.service";
 import { validate } from "../utils";
 
 export const uploadPhoto = async (req: Request, res: Response) => {
-  const userId = Number(req.params.userId);
+  const userEmail = req.params.email;
   const file = req.file as Express.Multer.File;
-  const photo = await photoService.uploadPhoto(userId, file);
+  const photo = await photoService.uploadPhoto(userEmail, file);
   res.send({ statusCode: StatusCodes.OK, photo });
 };
 
 export const fetchPhotos = async (req: Request, res: Response) => {
-  const userId = Number(req.params.userId);
-  const photos = await photoService.fetchPhotos(userId);
+  const userEmail = req.params.email 
+  const photos = await photoService.fetchPhotos(userEmail);
   res.send({ statusCode: StatusCodes.OK, photos })
 };
 
 export const updatePhotoAccess = 
   async (req: Request, res: Response) => {
-    const userId = Number(req.params.userId);
+    const userEmail = req.params.email;
     const photoId = Number(req.params.photoId);
 
     validate([{ type: "id", value: photoId }])
@@ -35,7 +35,7 @@ export const updatePhotoAccess =
     }
 
     const msg = await photoService.updatePhotoAccess(
-      userId,
+      userEmail,
       photoId,
       allowedUsers
     );

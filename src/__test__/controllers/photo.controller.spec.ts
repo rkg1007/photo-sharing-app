@@ -33,15 +33,21 @@ describe("upload photo controller", () => {
     const testCases = [
       {
         msg: "should call photoService.uploadPhoto",
-        request: { params: { userId: 1 }, file: {} as Express.Multer.File },
+        request: {
+          params: { email: "email@email.com" },
+          file: {} as Express.Multer.File,
+        },
         expectedFunctionCall: photoService.uploadPhoto,
-        withData: [1, {} as Express.Multer.File],
+        withData: ["email@email.com", {} as Express.Multer.File],
       },
       {
         msg: "should call response.send",
-        request: { params: { userId: 1 }, file: {} as Express.Multer.File },
+        request: {
+          params: { email: "email@email.com" },
+          file: {} as Express.Multer.File,
+        },
         expectedFunctionCall: mockedResponse.send,
-        withData: [{statusCode: 200, photo: mockedPhoto }],
+        withData: [{ statusCode: 200, photo: mockedPhoto }],
       },
     ];
 
@@ -58,15 +64,15 @@ describe("fetch photo controller", () => {
   const testCases = [
     {
       msg: "should call photoService.fetchPhotos",
-      request: { params: { userId: 1 } },
+      request: { params: { email: "email@email.com" } },
       expectedFunctionCall: photoService.fetchPhotos,
-      withData: [1],
+      withData: ["email@email.com"],
     },
     {
       msg: "should call response.status",
-      request: { params: { userId: 1 } },
+      request: { params: { email: "email@email.com" } },
       expectedFunctionCall: mockedResponse.send,
-      withData: [{ statusCode: 200, photos: [mockedPhoto]}],
+      withData: [{ statusCode: 200, photos: [mockedPhoto] }],
     },
   ];
 
@@ -87,20 +93,20 @@ describe("update Photo Access controller", () => {
     {
       msg: "should call photoService.updatePhotoAccess",
       request: {
-        params: { userId: 1, photoId: 1 },
+        params: { email: "email@email.com", photoId: 1 },
         body: { allowedUsers: ["email@gmail.com"] },
       },
       expectedFunctionCall: photoService.updatePhotoAccess,
-      withData: [1, 1, ["email@gmail.com"]],
+      withData: ["email@email.com", 1, ["email@gmail.com"]],
     },
     {
       msg: "should call response.status",
       request: {
-        params: { userId: 1, photoId: 1 },
+        params: { email: "email@email.com", photoId: 1 },
         body: { allowedUsers: ["email@email.com"] },
       },
       expectedFunctionCall: mockedResponse.send,
-      withData: [{statusCode: 200, msg: "access provided"}],
+      withData: [{ statusCode: 200, msg: "access provided" }],
     },
   ];
 
@@ -114,7 +120,10 @@ describe("update Photo Access controller", () => {
   );
 
   test("should give error if allowed user list undefined or empty", async () => {
-    const mockedRequest = mockRequest({ params: {userId: 1, photoId: 1}, body: {} });
+    const mockedRequest = mockRequest({
+      params: { email: "email@email.com", photoId: 1 },
+      body: {},
+    });
     expect(async () => {
       await updatePhotoAccess(mockedRequest, mockedResponse);
     }).rejects.toThrowError(Error.USER_LIST_EMPTY);

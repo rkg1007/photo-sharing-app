@@ -2,34 +2,25 @@ import prisma from "../../prisma/prisma";
 import { User } from "@prisma/client"
 import { BadRequest, NotFound } from "../errors";
 import { ICreateUser, IUpdateUser } from "../types";
-import { exclude, hashPassword } from "../utils";
+import { hashPassword } from "../utils";
 import { Error } from "../constants";
+import userRepository from "../repositories/user.repository";
 
 const createUser = async (userData: ICreateUser) => {
-  const isUserExist = await prisma.user.findUnique({
-    where: {
-      email: userData.email,
-    },
-  });
+  const isUserExist = await userRepository.getUser(userData.email)
   
   if (isUserExist) {
     throw new BadRequest(Error.USER_FOUND);
   }
 
   userData.password = await hashPassword(userData.password);
-  const user: User = await prisma.user.create({
-    data: userData,
-  });
+  const user = await userRepository.createUser(userData)
 
-  return exclude(user, ["password"]);
+  return user;
 };
 
-const updateUser = async (userId: number, updatedData: IUpdateUser) => {
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  });
+const updateUser = async (userEmail: string, updatedData: IUpdateUser) => {
+  const user = await userRepository.getUser(userEmail)
 
   if (!user) {
     throw new NotFound(Error.USER_NOT_FOUND);
@@ -38,28 +29,19 @@ const updateUser = async (userId: number, updatedData: IUpdateUser) => {
   if (updatedData.password) {
     updatedData.password = await hashPassword(updatedData.password);
   }
-  const updatedUser = await prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: updatedData
-  });
+  const updatedUser = await userRepository.updateUser(userEmail, updatedData);
 
-  return exclude(updatedUser, ["password"]);
+  return updatedUser;
 }
 
-const getUser = async (userId: number) => {
-    const user = await prisma.user.findUnique({
-        where: {
-            id: userId
-        }
-    });
+const getUser = async (userEmail: string) => {
+    const user = await userRepository.getUser(userEmail)
 
     if (!user) {
       throw new NotFound(Error.USER_NOT_FOUND);
     }
 
-    return exclude(user, ["password"]);
+    return user;
 }
 
 export default { createUser, updateUser, getUser };

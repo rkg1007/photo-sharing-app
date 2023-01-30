@@ -22,6 +22,6 @@ export const authenticate = (
   }
   const jwtToken = authorizationsChunks[1];
   const payload = verifyToken(jwtToken) as JwtPayload;
-  req.params.userId = payload.id;
+  req.params.email = payload.email;
   next();
 };

@@ -1,14 +1,12 @@
-import prisma from "../../prisma/prisma";
 import { Error } from "../constants";
 import { NotFound, Unauthorized } from "../errors";
+import userRepository from "../repositories/user.repository";
 import { ILoginData } from "../types";
 import { comparePassword, createAccessToken } from "../utils";
 
 const login = async (userData: ILoginData): Promise<string> => {
   const { email, password } = userData;
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
+  const user = await userRepository.getUser(email, { passwordRequired: true });
 
   if (!user) {
     throw new NotFound(Error.USER_NOT_FOUND);
@@ -19,7 +17,7 @@ const login = async (userData: ILoginData): Promise<string> => {
     throw new Unauthorized(Error.PASSWORD_NOT_MATCHED);
   }
 
-  return createAccessToken({ id: user.id });
+  return createAccessToken({ email: user.email });
 };
 
 export default {

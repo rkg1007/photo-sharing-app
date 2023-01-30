@@ -1,36 +1,35 @@
 import prisma from "../../../prisma/prisma";
 import { Error } from "../../constants";
+import userRepository from "../../repositories/user.repository";
 import authService from "../../services/auth.service";
 import { comparePassword, createAccessToken } from "../../utils";
 
 const mockedUserCredentials = {
-    email: "email",
-    password: "password"
+    email: "email@email.com",
+    password: "Password@123"
 }
 
 const mockedUser = {
     id: 1,
-    email: 'email',
+    email: 'email@email.com',
     password: 'hashedPassword'
 }
 
-jest.mock("../../../prisma/prisma", () => {
-    return {
-        user: {
-            findUnique: jest.fn((query) => {
-                if (query.where.email !== "email") {
-                    return null;
-                }
-                return mockedUser;
-            })
+jest.mock("../../repositories/user.repository", () => {
+  return {
+    getUser: jest.fn((email) => {
+        if (email !== "email@email.com") {
+          return null;
         }
-    }
+        return mockedUser;
+      }),
+  };
 });
 
 jest.mock("../../utils", () => {
     return {
       comparePassword: jest.fn((password) => {
-        if (password !== "password") {
+        if (password !== "Password@123") {
           return false;
         }
         return true;
@@ -44,8 +43,8 @@ describe("login service", () => {
       {
         msg: "should call prisma.user.findUnique",
         userData: mockedUserCredentials,
-        functionCallExpected: prisma.user.findUnique,
-        withData: [{ where: { email: mockedUserCredentials.email } }],
+        functionCallExpected: userRepository.getUser,
+        withData: [mockedUserCredentials.email, { passwordRequired: true}],
       },
       {
         msg: "should call comparePassword",
@@ -57,7 +56,7 @@ describe("login service", () => {
         msg: "should call createAccessToken",
         userData: mockedUserCredentials,
         functionCallExpected: createAccessToken,
-        withData: [{ id: mockedUser.id }],
+        withData: [{ email: mockedUser.email }],
       },
     ];
 
@@ -71,7 +70,7 @@ describe("login service", () => {
         expect(async () => {
           await authService.login({
             ...mockedUserCredentials,
-            email: "wrong email",
+            email: "wrong@email.com",
           });
         }).rejects.toThrowError(Error.USER_NOT_FOUND);
     })
@@ -80,7 +79,7 @@ describe("login service", () => {
       expect(async () => {
         await authService.login({
           ...mockedUserCredentials,
-          password: "wrong password",
+          password: "wrongPassword@123",
         });
       }).rejects.toThrowError(Error.PASSWORD_NOT_MATCHED);
     });

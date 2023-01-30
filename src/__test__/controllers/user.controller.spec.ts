@@ -69,12 +69,12 @@ describe("update user controller", () => {
   const testCases = [
     {
       msg: "should call userService.updateUser",
-      req: { params: { userId: 1 }, body: mockedUserDetail },
+      req: { params: { email: "email@email.com" }, body: mockedUserDetail },
       functionCallExpected: userService.updateUser,
-      withData: [1, mockedUserDetail],
+      withData: ["email@email.com", mockedUserDetail],
     },
     {
-      req: { params: { userId: 1 }, body: mockedUserDetail },
+      req: { params: { email: "email@email.com" }, body: mockedUserDetail },
       functionCallExpected: mockedResponse.send,
       withData: [{ statusCode: 200, user: mockedUserDetail }],
       msg: "should call response.send",
@@ -103,9 +103,9 @@ describe("get user controller", () => {
 
   const testCases = [
     {
-      req: { params: { userId: 1 } },
+      req: { params: { email: "email@email.com" } },
       functionCallExpected: userService.getUser,
-      withData: 1,
+      withData: "email@email.com",
       msg: "should call userService.getUser",
     },
     {

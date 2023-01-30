@@ -1,5 +1,6 @@
 import prisma from "../../../prisma/prisma";
 import { Error } from "../../constants";
+import photoRepository from "../../repositories/photo.repository";
 import photoService from "../../services/photo.service";
 
 const mockedPhoto = {
@@ -11,34 +12,26 @@ const mockedPhoto = {
 const mockedUser = {
   id: 1,
   name: "name",
-  email: "email",
+  email: "email@email.com",
   password: "hashedPassword",
 };
 
-jest.mock("../../../prisma/prisma", () => {
+jest.mock("../../repositories/photo.repository", () => {
   return {
-    photo: {
-      create: jest.fn(() => mockedPhoto),
-      findUnique: jest.fn((query) => {
-        if (query.where.id != 1) {
-            return null;
-        }
-        return mockedPhoto
-      })
-    },
-    user: {
-      findUnique: jest.fn((query) => {
-        const { email, id } = query.where;
-        if (email && email !== "email") {
-          return null;
-        }
-        if (id && id != 1) {
-          return null;
-        }
-        return [mockedPhoto];
-      }),
-      update: jest.fn(),
-    },
+    uploadPhoto: jest.fn((photoUrl, userEmail) => {
+      if (userEmail != "email@email.com") {
+        return null;
+      }
+      return mockedPhoto;
+    }),
+    fetchPhotos: jest.fn(() => [mockedPhoto]),
+    updatePhotoAccess: jest.fn(),
+    findPhoto: jest.fn(() => mockedPhoto)
+  };
+});
+jest.mock("../../repositories/user.repository", () => {
+  return {
+    getUserById: jest.fn(() => mockedUser)
   };
 });
 
@@ -49,26 +42,22 @@ describe("upload photo service", () => {
       photoData: {
         filename: "dummyImage.png",
       } as unknown as Express.Multer.File,
-      functionCallExpected: prisma.photo.create,
-      withData: {
-        data: {
-          url: "http://localhost:5000/images/dummyImage.png",
-          owner: {
-            connect: {
-              id: 1,
-            },
-          },
-        },
-      },
+      functionCallExpected: photoRepository.uploadPhoto,
+      withData: [
+        "http://localhost:5000/images/dummyImage.png",
+        "email@email.com",
+      ],
     },
   ];
 
   test.each(testCases)(
     "$msg",
     async ({ photoData, functionCallExpected, withData }) => {
-      const photo = await photoService.uploadPhoto(1, photoData);
-      expect(functionCallExpected).toHaveBeenCalledWith(withData);
-      expect(photo).toBe(mockedPhoto);
+      const photo = await photoService.uploadPhoto(
+        "email@email.com",
+        photoData
+      );
+      expect(functionCallExpected).toHaveBeenCalledWith(...withData);
     }
   );
 });
@@ -77,22 +66,15 @@ describe("fetch photo service", () => {
   const testCases = [
     {
       msg: "should call prisma.user.findUnique",
-      functionCallExpected: prisma.user.findUnique,
-      withData: {
-        where: {
-            id: 1
-        },
-        select: {
-            photos: true
-        }
-      },
+      functionCallExpected: photoRepository.fetchPhotos,
+      withData: "email@email.com",
     },
   ];
 
   test.each(testCases)(
     "$msg",
     async ({ functionCallExpected, withData }) => {
-      const photo = await photoService.fetchPhotos(1);
+      const photo = await photoService.fetchPhotos("email@email.com");
       expect(functionCallExpected).toHaveBeenCalledWith(withData);
       expect(photo).toEqual([mockedPhoto]);
     }
@@ -103,50 +85,17 @@ describe("update photo access service", () => {
   const testCases = [
     {
       msg: "should call prisma.user.update",
-      allowedEmails: ["email1"],
-      functionCallExpected: prisma.user.update,
-      withData: {
-        where: {
-          email: "email1",
-        },
-        data: {
-          photos: {
-            connect: [{ id: 1 }],
-          },
-        },
-      },
-    },
-    {
-      msg: "should call prisma.photo.findUnique",
-      allowedEmails: ["email1"],
-      functionCallExpected: prisma.photo.findUnique,
-      withData: {
-        where: {
-          id: 1,
-        },
-      },
+      allowedEmails: ["email1@email.com"],
+      functionCallExpected: photoRepository.updatePhotoAccess,
+      withData: [1, "email1@email.com"]
     },
   ];
 
   test.each(testCases)(
     "$msg",
     async ({ allowedEmails, functionCallExpected, withData }) => {
-      await photoService.updatePhotoAccess(1, 1, allowedEmails);
-      expect(functionCallExpected).toHaveBeenCalledWith(withData);
+      await photoService.updatePhotoAccess("email@email.com", 1, allowedEmails);
+      expect(functionCallExpected).toHaveBeenCalledWith(...withData);
     }
   );
-
-  test("should give error if user id doesn't match", async () => {
-    expect(async () => {
-      await photoService.updatePhotoAccess(2, 1, ["email1"]);
-    }).rejects.toThrowError(
-      Error.NOT_AUTHORISED
-    );
-  });
-
-  test("should give error if user id doesn't match", async () => {
-    expect(async () => {
-      await photoService.updatePhotoAccess(1, 2, ["email1"]);
-    }).rejects.toThrowError(Error.PHOTO_NOT_FOUND);
-  });
 });
