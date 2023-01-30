@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Error } from "../../constants";
 import { fetchPhotos, updatePhotoAccess, uploadPhoto } from "../../controllers/photo.controller";
-import { BadRequest } from "../../errors";
 import photoService from "../../services/photo.service";
 
 const mockedPhoto = {
@@ -89,16 +88,16 @@ describe("update Photo Access controller", () => {
       msg: "should call photoService.updatePhotoAccess",
       request: {
         params: { userId: 1, photoId: 1 },
-        body: { allowedUsers: ["email1"] },
+        body: { allowedUsers: ["email@gmail.com"] },
       },
       expectedFunctionCall: photoService.updatePhotoAccess,
-      withData: [1, 1, ["email1"]],
+      withData: [1, 1, ["email@gmail.com"]],
     },
     {
       msg: "should call response.status",
       request: {
         params: { userId: 1, photoId: 1 },
-        body: { allowedUsers: ["email1"] },
+        body: { allowedUsers: ["email@email.com"] },
       },
       expectedFunctionCall: mockedResponse.send,
       withData: [{statusCode: 200, msg: "access provided"}],

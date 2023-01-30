@@ -5,9 +5,9 @@ import { BadRequest } from "../../errors";
 import userService from "../../services/user.service";
 
 const mockedUserDetail = {
-  name: "dummy name",
-  email: "dummy email",
-  password: "dummy password",
+  name: "name",
+  email: "email@gmail.com",
+  password: "Password@123",
 };
 
 const mockRequest = (req: any) => {
@@ -22,21 +22,9 @@ const mockResponse = () => {
 
 jest.mock("../../services/user.service", () => {
   return {
-    createUser: jest.fn().mockResolvedValue({
-      name: "dummy name",
-      email: "dummy email",
-      password: "dummy password",
-    }),
-    updateUser: jest.fn().mockResolvedValue({
-      name: "dummy name",
-      email: "dummy email",
-      password: "dummy password",
-    }),
-    getUser: jest.fn().mockResolvedValue({
-      name: "dummy name",
-      email: "dummy email",
-      password: "dummy password",
-    }),
+    createUser: jest.fn(() => mockedUserDetail),
+    updateUser: jest.fn(() => mockedUserDetail),
+    getUser: jest.fn(() => mockedUserDetail),
   };
 });
 

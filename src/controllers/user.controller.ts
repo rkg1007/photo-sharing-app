@@ -3,15 +3,20 @@ import { Request, Response } from "express";
 import { BadRequest } from "../errors";
 import userService from "../services/user.service";
 import { Error } from "../constants";
+import { validate } from "../utils";
 
 export const createUser = async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
     throw new BadRequest(Error.MISSING_VALUE);
   }
-
+  validate([
+    { type: "email", value: email },
+    { type: "password", value: password },
+    { type: "name", value: name },
+  ]);
   const user = await userService.createUser({ name, email, password });
-  res.send({ statusCode: StatusCodes.CREATED, user })
+  res.send({ statusCode: StatusCodes.CREATED, user });
 };
 
 export const updateUser = async (req: Request, res: Response) => {
@@ -21,9 +26,18 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 
   const updatedData: Record<string, string> = {};
-  if (name) updatedData.name = name;
-  if (email) updatedData.email = email;
-  if (password) updatedData.password = password;
+  if (name) {
+    validate([{ type: "name", value: name }]);
+    updatedData.name = name;
+  }
+  if (email) {
+    validate([{ type: "email", value: email }]);
+    updatedData.email = email;
+  }
+  if (password) {
+    validate([{ type: "password", value: password }]);
+    updatedData.password = password;
+  }
   if (req.file) {
     updatedData.image = "http://localhost:5000/images/" + req.file.filename;
   }

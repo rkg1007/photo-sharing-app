@@ -4,8 +4,8 @@ import authService from "../../services/auth.service";
 import { Error } from "../../constants";
 
 const mockedCredentials = {
-    email: "dummy email",
-    password: "dummy password"
+    email: "email@email.com",
+    password: "Password@123"
 }
 
 const mockRequest = (req: any) => {

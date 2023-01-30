@@ -10,4 +10,8 @@ export enum Error {
     MISSING_AUTHORIZATION_TOKEN = "missing authorization token",
     INVALID_FILE_EXTENSION = "file extension is not supported.",
     NO_FIELD_CHANGED = "no field is changed",
+    INVALID_EMAIL = "email is not valid",
+    INVALID_NAME = "name is not valid",
+    INVALID_PASSWORD = "password is not valid",
+    INVALID_ID = "id is not valid"
 }
