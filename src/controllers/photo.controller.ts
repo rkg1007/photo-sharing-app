@@ -22,7 +22,7 @@ export const updatePhotoAccess = asyncWrapper(async (req: Request, res: Response
     const photoId = Number(req.params.photoId);
 
     const { allowedUsers } = req.body;
-    if (!allowedUsers) {
+    if (!allowedUsers || allowedUsers.length == 0) {
         throw new BadRequest("please send users list to allow access to users");
     }
 

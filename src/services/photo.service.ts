@@ -2,7 +2,7 @@ import prisma from "../../prisma/prisma";
 import { NotFound, Unauthorized } from "../errors";
 
 const uploadPhoto = async (userId: number, file: Express.Multer.File) => {
-    const photoUrl = "http://localhost:5000/images/" + file.filename;
+    const photoUrl = `http://localhost:5000/images/${file.filename}`.split(" ").join("");
     const photo = await prisma.photo.create({
         data: {
             url: photoUrl,

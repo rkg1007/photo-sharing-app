@@ -1,5 +1,5 @@
 import prisma from "../../prisma/prisma";
-import { User, Photo } from "@prisma/client"
+import { User } from "@prisma/client"
 import { BadRequest, NotFound } from "../errors";
 import { ICreateUser, IUpdateUser } from "../types";
 import { exclude, hashPassword } from "../utils";
@@ -10,6 +10,7 @@ const createUser = async (userData: ICreateUser) => {
       email: userData.email,
     },
   });
+  
   if (isUserExist) {
     throw new BadRequest("user already exists with the given email");
   }
@@ -28,17 +29,21 @@ const updateUser = async (userId: number, updatedData: IUpdateUser) => {
       id: userId,
     },
   });
+
   if (!user) {
     throw new NotFound("user doesn't exists");
   }
 
+  if (updatedData.password) {
+    updatedData.password = await hashPassword(updatedData.password);
+  }
   const updatedUser = await prisma.user.update({
     where: {
       id: userId,
     },
     data: updatedData
   });
-  console.log(updatedUser);
+
   return exclude(updatedUser, ["password"]);
 }
 
@@ -46,11 +51,9 @@ const getUser = async (userId: number) => {
     const user = await prisma.user.findUnique({
         where: {
             id: userId
-        },
-        include: {
-          photos: true
         }
     });
+
     if (!user) {
       throw new NotFound("user doesn't exists");
     }
